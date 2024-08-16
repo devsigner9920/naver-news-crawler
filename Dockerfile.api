@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN pip install Flask mysql-connector-python pytz
+
+COPY . .
+
+CMD ["python3", "api-app.py"]

@@ -1,0 +1,58 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: news
+      MYSQL_USER: news
+      MYSQL_PASSWORD: 1234@
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  news-crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile.crawler
+    container_name: news-crawler
+    environment:
+      - DB_HOST=mysql-container
+      - DB_PORT=3306
+      - DB_NAME=news
+      - DB_USER=news
+      - DB_PASSWORD=1234@
+    depends_on:
+      mysql:
+        condition: service_healthy
+#    networks:
+#      - app_network
+
+  news-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: news-api
+    ports:
+      - "4000:5000"
+    environment:
+      - DB_HOST=mysql-container
+      - DB_PORT=3306
+      - DB_NAME=news
+      - DB_USER=news
+      - DB_PASSWORD=1234@
+    depends_on:
+      mysql:
+        condition: service_healthy
+#    networks:
+#      - app_network
+#
+#networks:
+#  app_network:
+#    driver: bridge
